@@ -3,8 +3,17 @@
 ## How To Run
 
 - Create the environment from the environment.yml file:
-`conda env create -f environment.yml`
+  ```
+  conda env create -f environment.yml
+  ```
 The first line of the yml file sets the new environment's name.
-- use conda to install dependencies listed in environment.yml
+- Activate conda environment using
+  ```
+    conda activate palette
+  ```
+  or change the `palette` to the name of your environment name inside `environment.yml` first line
 - configure the `model_dir` inside `opencv.py` file to the directory to your liking
-- run `python opencv.py`
+- run
+  ```
+    python opencv.py
+  ```
