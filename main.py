@@ -20,9 +20,9 @@ def video_frame_callback(frame):
 
     # preprocessed_image = preprocess_image(img)
     # predictions = model.predict(preprocessed_image)
-    # predicted_class_index = np.argmax(predictions)
-    # predicted_class_label = class_labels[predicted_class_index]
-    # confidence = predictions[0][predicted_class_index]
+    predicted_class_index = np.argmax(predictions)
+    predicted_class_label = class_labels[predicted_class_index]
+    confidence = predictions[0][predicted_class_index]
 
     img = cv2.putText(img, class_labels[random.randint(0,7)], (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
     # send data to outside of this callback
