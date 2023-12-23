@@ -6,10 +6,10 @@ cap = cv2.VideoCapture(0)
 cap.set(3, 640)
 cap.set(4, 480)
 
-model_dir = "../yolov8-full-best.pt"
+model_yolo_dir = "../yolov8-full-best.pt"
 
 # model
-model = YOLO(model_dir)
+modelYolo = YOLO(model_yolo_dir)
 
 # object classes
 classNames = ["Varian 60 ml", "Varian 63 ml"]
@@ -17,7 +17,7 @@ classNames = ["Varian 60 ml", "Varian 63 ml"]
 
 while True:
     success, img = cap.read()
-    results = model(img, stream=True)
+    results = modelYolo(img, stream=True)
 
     for r in results:
         boxes = r.boxes
