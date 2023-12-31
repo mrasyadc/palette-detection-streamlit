@@ -14,16 +14,20 @@ class CameraApp:
         
         self.video_source = video_source
         self.vid = cv2.VideoCapture(self.video_source)
+       
         # Set initial width and height based on the window size
-        self.width = 1080
-        self.height = 720
+        self.width = 720
+        self.height = 560
 
         self.vid.set(cv2.CAP_PROP_FRAME_WIDTH, self.width)
         self.vid.set(cv2.CAP_PROP_FRAME_HEIGHT, self.height)
 
-        self.canvas = tk.Canvas(window, width=self.width, height=self.height)
+        self.classification_label = tk.Label(window, text="")
+        self.classification_label.pack(pady=10)
 
-        self.canvas.pack(padx=10, pady=10)
+        self.canvas = tk.Canvas(window, width=self.width, height=self.height)
+        self.canvas.pack()
+
 
         self.btn_start_camera = tk.Button(window, text="Start Camera", width=15, command=self.start_camera)
         self.btn_start_camera.pack(padx=10, pady=10)
@@ -31,8 +35,7 @@ class CameraApp:
         self.btn_snapshot = tk.Button(window, text="Snapshot", width=10, command=self.snapshot)
         self.btn_snapshot.pack(padx=10, pady=10)
 
-        self.classification_label = tk.Label(window, text="")
-        self.classification_label.pack(pady=10)
+        
 
         self.is_camera_running = False
         self.snapshot_folder = "snapshots"
@@ -79,26 +82,9 @@ class CameraApp:
         predicted_class_index = np.argmax(predictions)
         # predicted_class_label = class_labels[predicted_class_index]
         confidence = predictions[0][predicted_class_index]
-        label = f"{predicted_class_index} ({confidence})"
+        label = f"predicted_class: {predicted_class_index} confidence: {confidence*100:.2f}%"
 
-        text = f"Predicted: {label} confidence: {confidence*100}%"
-        self.classification_label.config(text=text)
-        self.draw_text_on_frame(frame, text)
-
-    def draw_text_on_frame(self, frame, text):
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = 0.5
-        font_color = (255, 255, 255)
-        line_type = 1
-
-        # Get text size
-        text_size = cv2.getTextSize(text, font, font_scale, line_type)[0]
-
-        # Calculate position to center the text at the top
-        text_x = int((self.width - text_size[0]) / 2)
-        text_y = text_size[1] + 10  # 10 pixels below the top
-
-        cv2.putText(frame, text, (text_x, text_y), font, font_scale, font_color, line_type)
+        self.classification_label.config(text=label)
 
     def update(self):
         if self.is_camera_running:
