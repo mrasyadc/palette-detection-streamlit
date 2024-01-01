@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import Canvas
+from tkinter import Canvas, filedialog, Text
 import cv2
 from PIL import Image, ImageTk
 import os
@@ -28,31 +28,61 @@ class CameraApp:
         self.canvas = tk.Canvas(window, width=self.width, height=self.height)
         self.canvas.pack()
 
-
         self.btn_start_camera = tk.Button(window, text="Start Camera", width=15, command=self.start_camera)
-        self.btn_start_camera.pack(padx=10, pady=10)
+        self.btn_start_camera.pack(side=tk.LEFT, padx=5)
 
         self.btn_snapshot = tk.Button(window, text="Snapshot", width=10, command=self.snapshot)
-        self.btn_snapshot.pack(padx=10, pady=10)
+        self.btn_snapshot.pack(side=tk.LEFT, padx=5)
 
-        
+        self.btn_choose_model = tk.Button(window, text="Choose Model", width=15, command=self.choose_model)
+        self.btn_choose_model.pack(side=tk.LEFT, padx=5)
+
+        self.label_max_tier = tk.Label(window, text="Choose max_tier:")
+        self.label_max_tier.pack(pady=5)
+
+        self.max_tier_var = tk.StringVar(self.window)
+        self.max_tier_var.set("1")  # Set the default value to 1
+
+        self.dropdown_max_tier = tk.OptionMenu(self.window, self.max_tier_var, "1", "2", "3", "4", "5", "6", "7", "8", "9", "10")
+        self.dropdown_max_tier.pack(pady=5)
+
+        self.tier_display_text = tk.Text(window, height=10, width=40)
+        self.tier_display_text.pack(pady=10)
 
         self.is_camera_running = False
+        self.model_selected = False
+        self.model = None
+        self.current_tier = 1
+
+         # Initialize the dictionary with None values
+        self.tier_data = {str(i + 1): None for i in range(int(self.max_tier_var.get()))}
+
+        # Bind the Configure event to update_max_tier_handler
+        self.dropdown_max_tier.bind("<Configure>", self.update_max_tier_handler)
+
         self.snapshot_folder = "snapshots"
         self.create_snapshot_folder()
-
-        self.model_dir = "../ResNet50V2_Dense512_KFold10_20.model"
-        self.model = tf.keras.models.load_model(self.model_dir)
+        
         self.update()
         self.window.protocol("WM_DELETE_WINDOW", self.on_close)  # Handle window close event
         self.window.mainloop()
 
+    def update_max_tier_handler(self, event):
+        # Reset current_tier to 1 when max_tier value changes
+        self.current_tier = 1
+        # Update the tier_data dictionary with None values
+        self.tier_data = {str(i + 1): None for i in range(int(self.max_tier_var.get()))}
+
     def start_camera(self):
-        self.is_camera_running = not self.is_camera_running
-        if self.is_camera_running:
-            self.btn_start_camera.config(text="Stop Camera")
+        if not self.model:
+            self.classification_label.config(text="Please select a model first")
+            return
         else:
-            self.btn_start_camera.config(text="Start Camera")
+            self.is_camera_running = not self.is_camera_running
+            if self.is_camera_running:
+                self.btn_start_camera.config(text="Stop Camera")
+            else:
+                self.btn_start_camera.config(text="Start Camera")
 
     def snapshot(self):
         ret, frame = self.vid.read()
@@ -73,18 +103,23 @@ class CameraApp:
     def classify_frame(self, frame):
         input_frame = cv2.resize(frame, (160, 320))
     
-
-        image = np.array(input_frame) / 255.0 # Normalize the pixel values to the range of [0, 1]
+        image = np.array(input_frame) / 255.0  # Normalize the pixel values to the range of [0, 1]
         image = np.expand_dims(image, axis=0) 
 
         predictions = self.model.predict(image)
 
         predicted_class_index = np.argmax(predictions)
-        # predicted_class_label = class_labels[predicted_class_index]
         confidence = predictions[0][predicted_class_index]
-        label = f"predicted_class: {predicted_class_index} confidence: {confidence*100:.2f}%"
+        label = f"Predicted Class: {predicted_class_index} Confidence: {confidence*100:.2f}%"
 
         self.classification_label.config(text=label)
+        self.tier_data[str(self.current_tier)] = label
+
+    def print_all_tiers_to_text_widget(self):
+        self.tier_display_text.delete(1.0, tk.END)  # Clear the existing text
+        
+        for tier, data in self.tier_data.items():
+            self.tier_display_text.insert(tk.END, f"Tier {tier}: {data}\n")
 
     def update(self):
         if self.is_camera_running:
@@ -95,8 +130,27 @@ class CameraApp:
                 self.photo = self.convert_to_photo_image(frame)
                 self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
                 self.classify_frame(frame)
+                if self.current_tier < int(self.max_tier_var.get()):
+                    self.current_tier += 1
+                    self.classification_label.config(text="Model loaded successfully for tier {}".format(self.current_tier))
+                self.print_all_tiers_to_text_widget()
         self.window.after(10, self.update)
 
+    def choose_model(self):
+        model_file_path = filedialog.askopenfilename(title="Select Model File", filetypes=[("Model files", "*.model")])
+        if model_file_path:
+            print(f"Selected model file: {model_file_path}")
+            # Load the selected model
+            self.model = tf.keras.models.load_model(model_file_path)
+            self.current_tier = 1
+            self.classification_label.config(text="Model loaded successfully")
+
+            # Ensure the camera is not running before assigning the model
+            if not self.is_camera_running:
+                self.btn_start_camera.config(state=tk.NORMAL)
+                self.btn_snapshot.config(state=tk.NORMAL)
+
+            
 
     def convert_to_photo_image(self, frame):
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
