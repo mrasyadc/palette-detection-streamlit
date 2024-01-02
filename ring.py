@@ -1,5 +1,5 @@
 import pygame
-import time
+import threading
 
 class RingPlayer:
     def __init__(self):
@@ -8,10 +8,16 @@ class RingPlayer:
         self.music_file_2 = "./sound/next-tier.mp3"
 
     def play_next(self):
+        threading.Thread(target=self._play_next).start()
+
+    def play_final(self):
+        threading.Thread(target=self._play_final).start()
+
+    def _play_next(self):
         pygame.mixer.music.load(self.music_file_1)
         pygame.mixer.music.play()
 
-    def play_final(self):
+    def _play_final(self):
         pygame.mixer.music.load(self.music_file_2)
         pygame.mixer.music.play()
 

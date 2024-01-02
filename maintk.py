@@ -93,8 +93,7 @@ class CameraApp:
         # Update the tier_data dictionary with None values for the new max_tier
         new_max_tier = int(self.max_tier_var.get())
         self.tier_data = {str(i + 1): None for i in range(new_max_tier)}
-        print("new max tier: ", new_max_tier)
-        print("new tier data: ", self.tier_data)
+        
         
 
     def update_max_tier_handler(self, event):
