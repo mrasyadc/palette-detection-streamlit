@@ -202,8 +202,6 @@ class CameraApp:
         if self.is_camera_running:
             ret, frame = self.vid.read()
             if ret:
-                print(self.max_tier_var.get())
-                print(self.tier_data)
                 # Resize frame to fit the window
                 frame = cv2.resize(frame, (self.width, self.height))
                 self.photo = self.convert_to_photo_image(frame)
