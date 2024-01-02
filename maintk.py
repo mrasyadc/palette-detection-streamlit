@@ -7,6 +7,9 @@ from datetime import datetime
 import numpy as np
 import tensorflow as tf
 import time
+import ring
+
+ring_player = ring.RingPlayer()
 
 class CameraApp:
     def __init__(self, window, window_title, video_source=0):
@@ -142,12 +145,15 @@ class CameraApp:
 
     def classify_frame(self, frame):
         if self.current_tier > int(self.max_tier_var.get()):
+            
             self.classification_label.config(text="This is the last tier. continue to next palette in 5 seconds")
+            ring_player.play_final()
             time.sleep(5)
             self.current_tier = 1
 
             #reset tier data
             self.tier_data = {str(i + 1): None for i in range(int(self.max_tier_var.get()))}
+            
             return
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -172,6 +178,8 @@ class CameraApp:
                 self.tier_data[str(self.current_tier)] = f"{predicted_class} in {timestamp}"
                 self.current_tier += 1
                 self.classification_label.config(text="Model loaded successfully for tier {}".format(self.current_tier))
+                ring_player.play_next()
+                time.sleep(5)
             
         else:
             if predicted_class == "Pola2_Benar":
@@ -180,7 +188,8 @@ class CameraApp:
                 self.tier_data[str(self.current_tier)] = f"{predicted_class} in {timestamp}"
                 self.current_tier += 1
                 self.classification_label.config(text="Model loaded successfully for tier {}".format(self.current_tier))
-                
+                ring_player.play_next()
+                time.sleep(5)
             
             
 
